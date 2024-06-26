@@ -432,6 +432,9 @@ def update_form_extraction_status(db_config, registration_no, config_dict):
         update_query_form6 = str(config_dict['form6_extraction_needed_update_query']).format(registration_no, registration_no)
         logging.info(update_query_form6)
         cursor.execute(update_query_form6)
+        update_query_financial = str(config_dict['financial_update_query']).format(registration_no)
+        logging.info(update_query_financial)
+        cursor.execute(update_query_financial)
         cursor.close()
         connection.close()
     except Exception as e:
