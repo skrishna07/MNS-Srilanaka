@@ -19,6 +19,7 @@ def split_address(registration_no,config_dict,db_config):
     prompt = config_dict['Prompt']
     for address in address_list:
         address_to_split = address[0]
+        address_to_split = address_to_split.replace("'", "").replace('"', "")
         logging.info(address_to_split)
         if str(address_to_split).lower() != 'null' and address_to_split is not None:
             connection = mysql.connector.connect(**db_config)
@@ -42,6 +43,7 @@ def split_address(registration_no,config_dict,db_config):
     connection.close()
     for previous_address in previous_address_list:
         previous_address_to_split = previous_address[0]
+        previous_address_to_split = previous_address_to_split.replace("'", "").replace('"', "")
         if str(previous_address_to_split).lower() != 'null' and previous_address_to_split is not None:
             connection = mysql.connector.connect(**db_config)
             cursor = connection.cursor()
@@ -74,6 +76,7 @@ def split_address(registration_no,config_dict,db_config):
     connection.close()
     for registered_address in registered_address_list:
         registered_address_to_split = registered_address[0]
+        registered_address_to_split = registered_address_to_split.replace("'", "").replace('"', "")
         if str(registered_address_to_split).lower() != 'null' and registered_address_to_split is not None:
             connection = mysql.connector.connect(**db_config)
             cursor = connection.cursor()
