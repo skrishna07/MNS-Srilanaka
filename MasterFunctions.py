@@ -45,7 +45,7 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
                 document_name = document[2]
                 document_date = document[3]
                 document_download_path = document[5]
-                document_download_path = f"r{document_download_path}"
+                document_download_path = f'r"{document_download_path}"'
                 output_path = str(document_download_path).replace('.pdf', '.xlsx')
                 extraction_config = config_dict['extraction_config_path']
                 logging.info(f"Going to extract for {document_name} with date - {document_date}")
