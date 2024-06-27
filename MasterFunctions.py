@@ -22,6 +22,9 @@ from Form6_SameDateCheck import form6_same_date_check
 from S_Finance import finance_main
 from ProfitandLoss import profit_and_loss_main
 import os
+from DatabaseQueries import get_financial_status
+from DatabaseQueries import update_finance_status
+from DatabaseQueries import update_pnl_status
 
 
 def data_extraction_and_insertion(db_config, registration_no, config_dict):
@@ -107,9 +110,14 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
                     if '.xlsx' not in finance_output_file_name:
                         finance_output_file_name = finance_output_file_name + '.xlsx'
                     finance_output_file_path = os.path.join(temp_pdf_directory, finance_output_file_name)
-                    main_finance_extraction = finance_main(db_config, config_dict, document_download_path, registration_no, temp_pdf_path_finance, finance_output_file_path)
-                    if main_finance_extraction:
-                        logging.info(f"Successfully extracted for assets and liabilities")
+                    finance_status, profit_and_loss_status = get_financial_status(db_config, registration_no, document_id)
+                    if str(finance_status).lower() != 'y':
+                        main_finance_extraction = finance_main(db_config, config_dict, document_download_path, registration_no, temp_pdf_path_finance, finance_output_file_path)
+                        if main_finance_extraction:
+                            logging.info(f"Successfully extracted for assets and liabilities")
+                            update_finance_status(db_config, registration_no, document_id)
+                    else:
+                        logging.info(f"Already extracted for assets and liabilities")
                     temp_pdf_name_pnl = 'temp_pnl_' + document_name
                     if '.pdf' not in temp_pdf_name_pnl:
                         temp_pdf_name_pnl = temp_pdf_name_pnl + '.pdf'
@@ -118,9 +126,16 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
                     if '.xlsx' not in pnl_output_file_name:
                         pnl_output_file_name = pnl_output_file_name + '.xlsx'
                     pnl_output_path = os.path.join(temp_pdf_directory, pnl_output_file_name)
-                    pnl_extraction = profit_and_loss_main(db_config, config_dict, document_download_path, registration_no, temp_pdf_path_pnl, pnl_output_path)
-                    if pnl_extraction:
-                        logging.info(f"Successfully extracted Profit and Loss")
+                    if str(profit_and_loss_status).lower() != 'y':
+                        pnl_extraction = profit_and_loss_main(db_config, config_dict, document_download_path, registration_no, temp_pdf_path_pnl, pnl_output_path)
+                        if pnl_extraction:
+                            logging.info(f"Successfully extracted Profit and Loss")
+                            update_pnl_status(db_config, registration_no, document_id)
+                    else:
+                        logging.info(f"Already extracted Profit and Loss")
+                    updated_finance_status, updated_pnl_status = get_financial_status(db_config, registration_no, document_id)
+                    if str(updated_finance_status).lower() == 'y' and str(updated_pnl_status).lower() == 'y':
+                        logging.info(f"Successfully extracted for {document_name}")
                         update_extraction_status(db_config, document_id, registration_no)
             except Exception as e:
                 logging.error(f"Error {e} occurred while extracting for file - {document_name} at path - {document_download_path}")

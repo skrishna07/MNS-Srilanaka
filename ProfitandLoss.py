@@ -11,18 +11,30 @@ import re
 from DatabaseQueries import update_database_single_value_financial
 
 
-def find_header_and_next_pages(pdf_path, fields):
+def find_header_and_next_pages(pdf_path, header_fields, negative_fields ,fields):
     # Open the PDF file
     pdf_file = open(pdf_path, 'rb')
     pdf_reader = PyPDF2.PdfReader(pdf_file)
     num_pages = len(pdf_reader.pages)
     # Search for the header in the PDF
-    for page_num in range(num_pages):
-        page = pdf_reader.pages[page_num]
-        text = page.extract_text()
-        if text and any(field in text for field in fields) and page_num > 20:
-            logging.info(text)
-            next_page = page_num + 1 if page_num + 1 < num_pages else None
+    for page_num in range(0, num_pages, 2):
+        # Read the current page and the next page
+        page1 = pdf_reader.pages[page_num]
+        text1 = page1.extract_text()
+
+        text2 = ""
+        if page_num + 1 < num_pages:
+            page2 = pdf_reader.pages[page_num + 1]
+            text2 = page2.extract_text()
+
+        # Combine text from both pages
+        combined_text = (text1 or "") + "\n" + (text2 or "")
+        # print(combined_text.lower())
+        # print('\n')
+        # print('--------------------------------------------')
+        # Check if all fields are in the combined text
+        if combined_text and any(field in combined_text.lower() for field in header_fields) and any(field in combined_text.lower() for field in fields) and not any(neg_field in combined_text.lower() for neg_field in negative_fields)and page_num > 20:
+            next_page = page_num + 2 if page_num + 2 < num_pages else None
             return page_num, next_page
     return None, None
 
@@ -48,8 +60,10 @@ def profit_and_loss_main(db_config, config_dict, pdf_path, registration_no, temp
     error_count = 0
     errors = []
     try:
-        fields = str(config_dict['profit_and_loss_headers']).split(',')
-        starting_page, ending_page = find_header_and_next_pages(pdf_path, fields)
+        header_fields = str(config_dict['profit_and_loss_headers']).split(',')
+        fields = str(config_dict['profit_and_loss_fields']).split(',')
+        negative_fields = str(config_dict['financial_negative_headers']).split(',')
+        starting_page, ending_page = find_header_and_next_pages(pdf_path, header_fields, negative_fields, fields)
         if starting_page is not None:
             logging.info(f"Taking from page {starting_page + 1} to {ending_page + 1}")
         split_pdf(pdf_path, starting_page+1, ending_page+1, temp_pdf_path)
@@ -119,11 +133,14 @@ def profit_and_loss_main(db_config, config_dict, pdf_path, registration_no, temp
                 group_value = output["Group"][0]
                 for key, value in group_value.items():
                     for subkey, sub_value in value.items():
-                        sub_year_dict = master_open_ai_dict["Group"][0][key]
                         try:
-                            sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
-                        except:
-                            sub_year_dict[subkey] = sub_value
+                            sub_year_dict = master_open_ai_dict["Group"][0][key]
+                            try:
+                                sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
+                            except:
+                                sub_year_dict[subkey] = sub_value
+                        except Exception as e:
+                            continue
                 company_value = output["Company"][0]
                 for key, value in company_value.items():
                     for subkey, sub_value in value.items():
@@ -253,4 +270,3 @@ def profit_and_loss_main(db_config, config_dict, pdf_path, registration_no, temp
             return True
         else:
             raise Exception(f"Multiple exceptions occurred:\n\n" + "\n".join(errors))
-
