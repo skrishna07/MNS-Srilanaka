@@ -314,7 +314,7 @@ def form6_main(db_config, config_dict, pdf_path, output_file_path, registration_
                         else:
                             logging.info(f"These details are not there in form 15 so inserting from form 6 for name - {name}")
                             try:
-                                no_of_shares = row_share['no_of_shares'].replace(',', '')
+                                no_of_shares = str(row_share['no_of_shares'].replace(',', ''))
                                 no_of_shares = int(no_of_shares)
                                 percentage_holding = (no_of_shares / total_equity_shares)*100
                             except Exception as e:

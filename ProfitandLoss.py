@@ -144,11 +144,14 @@ def profit_and_loss_main(db_config, config_dict, pdf_path, registration_no, temp
                 company_value = output["Company"][0]
                 for key, value in company_value.items():
                     for subkey, sub_value in value.items():
-                        sub_year_dict = master_open_ai_dict["Company"][0][key]
                         try:
-                            sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
-                        except:
-                            sub_year_dict[subkey] = sub_value
+                            sub_year_dict = master_open_ai_dict["Company"][0][key]
+                            try:
+                                sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
+                            except:
+                                sub_year_dict[subkey] = sub_value
+                        except Exception as e:
+                            continue
             i = i+1
         if len(master_open_ai_dict["Group"]) != 0:
             group_output = master_open_ai_dict["Group"][0]
