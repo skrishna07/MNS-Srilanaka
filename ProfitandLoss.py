@@ -131,28 +131,30 @@ def profit_and_loss_main(db_config, config_dict, pdf_path, registration_no, temp
                 if i == 0:
                     master_open_ai_dict = output
                 else:
-                    group_value = output["Group"][0]
-                    for key, value in group_value.items():
-                        for subkey, sub_value in value.items():
-                            try:
-                                sub_year_dict = master_open_ai_dict["Group"][0][key]
+                    if len(output["Group"]) != 0:
+                        group_value = output["Group"][0]
+                        for key, value in group_value.items():
+                            for subkey, sub_value in value.items():
                                 try:
-                                    sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
-                                except:
-                                    sub_year_dict[subkey] = sub_value
-                            except Exception as e:
-                                continue
-                    company_value = output["Company"][0]
-                    for key, value in company_value.items():
-                        for subkey, sub_value in value.items():
-                            try:
-                                sub_year_dict = master_open_ai_dict["Company"][0][key]
+                                    sub_year_dict = master_open_ai_dict["Group"][0][key]
+                                    try:
+                                        sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
+                                    except:
+                                        sub_year_dict[subkey] = sub_value
+                                except Exception as e:
+                                    continue
+                    if len(output["Company"]) != 0:
+                        company_value = output["Company"][0]
+                        for key, value in company_value.items():
+                            for subkey, sub_value in value.items():
                                 try:
-                                    sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
-                                except:
-                                    sub_year_dict[subkey] = sub_value
-                            except Exception as e:
-                                continue
+                                    sub_year_dict = master_open_ai_dict["Company"][0][key]
+                                    try:
+                                        sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
+                                    except:
+                                        sub_year_dict[subkey] = sub_value
+                                except Exception as e:
+                                    continue
                 i = i+1
             except Exception as e:
                 logging.error(f"Error occurred for {open_ai_df} {e}")
