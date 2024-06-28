@@ -129,49 +129,53 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, temp_pdf_pat
         master_open_ai_dict = {}
         i = 0
         for open_ai_df in open_ai_df_list:
-            straight_field_nodes = open_ai_df['Node'].unique()
-            exclude_fields = ['year', 'financial_year', 'nature', 'filing_type', 'filing_standard']
-            master_dict = {"Group": [{'YYYY': ""}], "Company": [{'YYYY': ""}]}
-            open_ai_dict = {field_name: '' for field_name in straight_field_nodes if field_name not in exclude_fields}
-            master_dict["Group"][0]["YYYY"] = str(open_ai_dict)
-            master_dict["Company"][0]["YYYY"] = str(open_ai_dict)
-            prompt = config_dict['financial_prompt'] + '\n' + str(master_dict) + '\n' +  config_dict['financial_example_prompt']
-            output = split_openai(extracted_text, prompt)
             try:
-                output = re.sub(r'(?<=: ")(\d+(,\d+)*)(?=")', lambda x: x.group(1).replace(",", ""), output)
-            except:
-                pass
-            logging.info(output)
-            try:
-                output = eval(output)
-            except:
-                output = json.loads(output)
-            if i == 0:
-                master_open_ai_dict = output
-            else:
-                group_value = output["Group"][0]
-                for key, value in group_value.items():
-                    for subkey, sub_value in value.items():
-                        try:
-                            sub_year_dict = master_open_ai_dict["Group"][0][key]
+                straight_field_nodes = open_ai_df['Node'].unique()
+                exclude_fields = ['year', 'financial_year', 'nature', 'filing_type', 'filing_standard']
+                master_dict = {"Group": [{'YYYY': ""}], "Company": [{'YYYY': ""}]}
+                open_ai_dict = {field_name: '' for field_name in straight_field_nodes if field_name not in exclude_fields}
+                master_dict["Group"][0]["YYYY"] = str(open_ai_dict)
+                master_dict["Company"][0]["YYYY"] = str(open_ai_dict)
+                prompt = config_dict['financial_prompt'] + '\n' + str(master_dict) + '\n' +  config_dict['financial_example_prompt']
+                output = split_openai(extracted_text, prompt)
+                try:
+                    output = re.sub(r'(?<=: ")(\d+(,\d+)*)(?=")', lambda x: x.group(1).replace(",", ""), output)
+                except:
+                    pass
+                logging.info(output)
+                try:
+                    output = eval(output)
+                except:
+                    output = json.loads(output)
+                if i == 0:
+                    master_open_ai_dict = output
+                else:
+                    group_value = output["Group"][0]
+                    for key, value in group_value.items():
+                        for subkey, sub_value in value.items():
                             try:
-                                sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
-                            except:
-                                sub_year_dict[subkey] = sub_value
-                        except Exception as e:
-                            continue
-                company_value = output["Company"][0]
-                for key, value in company_value.items():
-                    for subkey, sub_value in value.items():
-                        try:
-                            sub_year_dict = master_open_ai_dict["Company"][0][key]
+                                sub_year_dict = master_open_ai_dict["Group"][0][key]
+                                try:
+                                    sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
+                                except:
+                                    sub_year_dict[subkey] = sub_value
+                            except Exception as e:
+                                continue
+                    company_value = output["Company"][0]
+                    for key, value in company_value.items():
+                        for subkey, sub_value in value.items():
                             try:
-                                sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
-                            except:
-                                sub_year_dict[subkey] = sub_value
-                        except Exception as e:
-                            continue
-            i = i+1
+                                sub_year_dict = master_open_ai_dict["Company"][0][key]
+                                try:
+                                    sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
+                                except:
+                                    sub_year_dict[subkey] = sub_value
+                            except Exception as e:
+                                continue
+                i = i+1
+            except Exception as e:
+                logging.error(f"Exception occurred {e} for {open_ai_df}")
+                i = i+1
         if len(master_open_ai_dict["Group"]) != 0:
             group_output = master_open_ai_dict["Group"][0]
         else:
