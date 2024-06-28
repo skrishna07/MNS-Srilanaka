@@ -13,14 +13,14 @@ def split_openai(text, initial_prompt):
     prompt = str(text) + ' ' + '\n' + '--------------------------------' + '\n' + initial_prompt
     logging.info(prompt)
     payload = json.dumps({
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4",
         "messages": [
             {
                 "role": "user",
                 "content": prompt
             }
         ],
-        "temperature": 1.0,
+        "temperature": 0.7,
         "max_tokens": 4050,
         "top_p": 1,
         "frequency_penalty": 0,
