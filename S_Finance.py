@@ -81,109 +81,34 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, temp_pdf_pat
         df_map['Value'] = None
         open_ai_df_list = []
         registration_no_column_name = config_dict['registration_no_Column_name']
-        financial_df = df_map[(df_map['Type_of_financial'] == config_dict['financial_asset_keyword_group1']) | (df_map['Type_of_financial'] == config_dict['common_keyword']) | (df_map['Type_of_financial'] == config_dict['financial_asset_keyword_group2']) | (df_map['Type_of_financial'] == config_dict['financial_asset_keyword_group3']) | (df_map['Type_of_financial'] == config_dict['financial_asset_keyword_group4']) | (df_map['Type_of_financial'] == config_dict['financial_asset_keyword_group5']) | (df_map['Type_of_financial'] == config_dict['financial_asset_keyword_group6']) | (df_map['Type_of_financial'] == config_dict['financial_liabilities_keyword_group1']) | (df_map['Type_of_financial'] == config_dict['financial_liabilities_keyword_group2']) | (df_map['Type_of_financial'] == config_dict['financial_liabilities_keyword_group3']) | (df_map['Type_of_financial'] == config_dict['financial_liabilities_keyword_group4']) | (df_map['Type_of_financial'] == config_dict['financial_liabilities_keyword_group5']) | (df_map['Type_of_financial'] == config_dict['financial_liabilities_keyword_group6']) | (df_map['Type_of_financial'] == config_dict['financial_liabilities_keyword_group7']) | (df_map['Type_of_financial'] == config_dict['financial_liabilities_keyword_group8'])]
+        financial_df = df_map[(df_map['Type_of_financial'] == config_dict['financial_keyword']) | (df_map['Type_of_financial'] == config_dict['common_keyword'])]
         straight_df = financial_df[(financial_df[financial_df.columns[1]] == config_dict['financial_straight_keyword']) &
                             (financial_df['Node'].notna()) &
                             (financial_df['Node'] != '') &
                             (financial_df['Node'] != 'null')]
-        assets_df_group1 = straight_df[(straight_df['Type_of_financial'] == config_dict['financial_asset_keyword_group1'])]
-        open_ai_df_list.append(assets_df_group1)
-        assets_df_group2 = straight_df[
-            (straight_df['Type_of_financial'] == config_dict['financial_asset_keyword_group2'])]
-        open_ai_df_list.append(assets_df_group2)
-        assets_df_group3 = straight_df[
-            (straight_df['Type_of_financial'] == config_dict['financial_asset_keyword_group3'])]
-        open_ai_df_list.append(assets_df_group3)
-        assets_df_group4 = straight_df[
-            (straight_df['Type_of_financial'] == config_dict['financial_asset_keyword_group4'])]
-        open_ai_df_list.append(assets_df_group4)
-        assets_df_group5 = straight_df[
-            (straight_df['Type_of_financial'] == config_dict['financial_asset_keyword_group5'])]
-        open_ai_df_list.append(assets_df_group5)
-        assets_df_group6 = straight_df[
-            (straight_df['Type_of_financial'] == config_dict['financial_asset_keyword_group6'])]
-        open_ai_df_list.append(assets_df_group6)
-        liabilities_df_group1 = straight_df[(straight_df['Type_of_financial'] == config_dict['financial_liabilities_keyword_group1'])]
-        open_ai_df_list.append(liabilities_df_group1)
-        liabilities_df_group2 = straight_df[
-            (straight_df['Type_of_financial'] == config_dict['financial_liabilities_keyword_group2'])]
-        open_ai_df_list.append(liabilities_df_group2)
-        liabilities_df_group3 = straight_df[
-            (straight_df['Type_of_financial'] == config_dict['financial_liabilities_keyword_group3'])]
-        open_ai_df_list.append(liabilities_df_group3)
-        liabilities_df_group4 = straight_df[
-            (straight_df['Type_of_financial'] == config_dict['financial_liabilities_keyword_group4'])]
-        open_ai_df_list.append(liabilities_df_group4)
-        liabilities_df_group5 = straight_df[
-            (straight_df['Type_of_financial'] == config_dict['financial_liabilities_keyword_group5'])]
-        open_ai_df_list.append(liabilities_df_group5)
-        liabilities_df_group6 = straight_df[
-            (straight_df['Type_of_financial'] == config_dict['financial_liabilities_keyword_group6'])]
-        open_ai_df_list.append(liabilities_df_group6)
-        liabilities_df_group7 = straight_df[
-            (straight_df['Type_of_financial'] == config_dict['financial_liabilities_keyword_group7'])]
-        open_ai_df_list.append(liabilities_df_group7)
-        liabilities_df_group8 = straight_df[
-            (straight_df['Type_of_financial'] == config_dict['financial_liabilities_keyword_group8'])]
-        open_ai_df_list.append(liabilities_df_group8)
-        master_open_ai_dict = {}
-        i = 0
-        for open_ai_df in open_ai_df_list:
-            try:
-                straight_field_nodes = open_ai_df['Node'].unique()
-                exclude_fields = ['year', 'financial_year', 'nature', 'filing_type', 'filing_standard']
-                master_dict = {"Group": [{'YYYY': ""}], "Company": [{'YYYY': ""}]}
-                open_ai_dict = {field_name: '' for field_name in straight_field_nodes if field_name not in exclude_fields}
-                master_dict["Group"][0]["YYYY"] = str(open_ai_dict)
-                master_dict["Company"][0]["YYYY"] = str(open_ai_dict)
-                prompt = config_dict['financial_prompt'] + '\n' + str(master_dict) + '\n' +  config_dict['financial_example_prompt']
-                output = split_openai(extracted_text, prompt)
-                try:
-                    output = re.sub(r'(?<=: ")(\d+(,\d+)*)(?=")', lambda x: x.group(1).replace(",", ""), output)
-                except:
-                    pass
-                logging.info(output)
-                try:
-                    output = eval(output)
-                except:
-                    output = json.loads(output)
-                if i == 0:
-                    master_open_ai_dict = output
-                else:
-                    if len(output["Group"]) != 0:
-                        group_value = output["Group"][0]
-                        for key, value in group_value.items():
-                            for subkey, sub_value in value.items():
-                                try:
-                                    sub_year_dict = master_open_ai_dict["Group"][0][key]
-                                    try:
-                                        sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
-                                    except:
-                                        sub_year_dict[subkey] = sub_value
-                                except Exception as e:
-                                    continue
-                    if len(output["Company"]) != 0:
-                        company_value = output["Company"][0]
-                        for key, value in company_value.items():
-                            for subkey, sub_value in value.items():
-                                try:
-                                    sub_year_dict = master_open_ai_dict["Company"][0][key]
-                                    try:
-                                        sub_year_dict[subkey] = float(str(sub_value).replace(',',''))
-                                    except:
-                                        sub_year_dict[subkey] = sub_value
-                                except Exception as e:
-                                    continue
-                i = i+1
-            except Exception as e:
-                logging.error(f"Exception occurred {e} for {open_ai_df}")
-                i = i+1
-        if len(master_open_ai_dict["Group"]) != 0:
-            group_output = master_open_ai_dict["Group"][0]
+        straight_field_nodes = straight_df['Node'].unique()
+        exclude_fields = ['year', 'financial_year', 'nature', 'filing_type', 'filing_standard']
+        master_dict = {"Group": [{'YYYY': ""}], "Company": [{'YYYY': ""}]}
+        open_ai_dict = {field_name: '' for field_name in straight_field_nodes if field_name not in exclude_fields}
+        master_dict["Group"][0]["YYYY"] = str(open_ai_dict)
+        master_dict["Company"][0]["YYYY"] = str(open_ai_dict)
+        prompt = config_dict['financial_prompt'] + '\n' + str(master_dict)
+        output = split_openai(extracted_text, prompt)
+        try:
+            output = re.sub(r'(?<=: ")(\d+(,\d+)*)(?=")', lambda x: x.group(1).replace(",", ""), output)
+        except:
+            pass
+        logging.info(output)
+        try:
+            output = eval(output)
+        except:
+            output = json.loads(output)
+        if len(output["Group"]) != 0:
+            group_output = output["Group"][0]
         else:
             group_output = {}
-        if len(master_open_ai_dict["Company"]) != 0:
-            company_output = master_open_ai_dict["Company"][0]
+        if len(output["Company"]) != 0:
+            company_output = output["Company"][0]
         else:
             company_output = {}
         main_group_df = financial_df.copy()
@@ -203,6 +128,7 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, temp_pdf_pat
                 group_formula = row['Node']
                 group_formula_field_name = row['Field_Name']
                 for field_name in group_year_df['Field_Name']:
+                    field_name = str(field_name)
                     pattern = r'\b' + re.escape(field_name) + r'\b'
                     # current_formula = current_formula.replace(field_name, str(current_year_df[current_year_df['Field_Name'] == field_name]['Value'].values[0]))
                     replacement_value = str(
@@ -235,6 +161,7 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, temp_pdf_pat
                 company_formula = row['Node']
                 company_formula_field_name = row['Field_Name']
                 for field_name in company_year_df['Field_Name']:
+                    field_name = str(field_name)
                     pattern = r'\b' + re.escape(field_name) + r'\b'
                     # current_formula = current_formula.replace(field_name, str(current_year_df[current_year_df['Field_Name'] == field_name]['Value'].values[0]))
                     replacement_value = str(
