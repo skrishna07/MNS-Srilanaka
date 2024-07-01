@@ -103,13 +103,19 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, temp_pdf_pat
             output = eval(output)
         except:
             output = json.loads(output)
-        if len(output["Group"]) != 0:
-            group_output = output["Group"][0]
-        else:
+        try:
+            if len(output["Group"]) != 0:
+                group_output = output["Group"][0]
+            else:
+                group_output = {}
+        except:
             group_output = {}
-        if len(output["Company"]) != 0:
-            company_output = output["Company"][0]
-        else:
+        try:
+            if len(output["Company"]) != 0:
+                company_output = output["Company"][0]
+            else:
+                company_output = {}
+        except:
             company_output = {}
         main_group_df = financial_df.copy()
         main_company_df = financial_df.copy()

@@ -9,6 +9,28 @@ from OpenAI import split_openai
 from ReadExcelConfig import create_main_config_dictionary
 from DatabaseQueries import get_db_credentials
 import traceback
+from Form15 import get_gender_dob
+from datetime import datetime
+
+
+def get_age(DOB):
+    # Given date in the "dd/mm/yyyy" format
+    try:
+        given_date_string = DOB
+
+        # Parse the given date string
+        given_date = datetime.strptime(given_date_string, "%Y-%m-%d")
+
+        # Get the current date
+        current_date = datetime.now()
+
+        # Calculate the age
+        age = current_date.year - given_date.year - (
+                (current_date.month, current_date.day) < (given_date.month, given_date.day))
+        return age
+    except Exception as e:
+        logging.info(f"Error in calculating age {e}")
+        return None
 
 
 def insert_datatable_with_table_form20(config_dict, db_config, sql_table_name, column_names_list, df_row , field_name):
@@ -158,6 +180,7 @@ def form20_main(db_config, config_dict, pdf_path, output_file_path, registration
         form20_prompt = config_dict['form20_prompt'] + '\n' + str(open_ai_dict)
         output = split_openai(pdf_text, form20_prompt)
         logging.info(output)
+        nic_list = []
         try:
             output = eval(output)
         except:
@@ -172,8 +195,22 @@ def form20_main(db_config, config_dict, pdf_path, output_file_path, registration
             else:
                 value = None
             df_map.at[index, 'Value'] = value
+            if field_name == 'appointment_directors':
+                for sub_value in value:
+                    try:
+                        nic = sub_value['nic']
+                    except Exception as e:
+                        nic = None
+                        error_count += 1
+                        tb = traceback.extract_tb(e.__traceback__)
+                        for frame in tb:
+                            if frame.filename == __file__:
+                                errors.append(f"Line {frame.lineno}: {frame.line} - {str(e)}")
+                    nic_list.append(nic)
         group_df = df_map[df_map[df_map.columns[1]] == config_dict['group_keyword']]
         registration_no_column_name = config_dict['registration_no_Column_name']
+        nic_url = config_dict['nic_url']
+        nic_dob_gender_details = get_gender_dob(nic_url, nic_list)
         for index, row in group_df.iterrows():
             try:
                 field_name = str(row.iloc[0]).strip()
@@ -186,6 +223,36 @@ def form20_main(db_config, config_dict, pdf_path, output_file_path, registration
                 logging.info(table_df)
                 column_names_list = column_names.split(',')
                 column_names_list = [x.strip() for x in column_names_list]
+                if sql_table_name == 'authorized_signatories':
+                    table_df['age'] = None
+                    table_df['nationality'] = None
+                    table_df['date_of_birth'] = None
+                    table_df['gender'] = None
+                    column_names_list.append('age')
+                    column_names_list.append('nationality')
+                    column_names_list.append('date_of_birth')
+                    column_names_list.append('gender')
+                    for index_dob, row_dob in table_df.iterrows():
+                        try:
+                            nic = str(row_dob['nic']).strip()
+                            details_dict = nic_dob_gender_details.get(nic)
+                            date_of_birth = details_dict['Date of Birth']
+                            gender = details_dict['Gender']
+                            nationality = details_dict['Nationality']
+                            age = None
+                            if date_of_birth is not None and gender is not None:
+                                age = get_age(date_of_birth)
+                            table_df.at[index_dob, 'age'] = age
+                            table_df.at[index_dob, 'nationality'] = nationality
+                            table_df.at[index_dob, 'date_of_birth'] = date_of_birth
+                            table_df.at[index_dob, 'gender'] = gender
+                        except Exception as e:
+                            logging.error(f"Exception {e} occurred while getting age")
+                            error_count += 1
+                            tb = traceback.extract_tb(e.__traceback__)
+                            for frame in tb:
+                                if frame.filename == __file__:
+                                    errors.append(f"Line {frame.lineno}: {frame.line} - {str(e)}")
                 table_df[registration_no_column_name] = registration_no
                 column_names_list.append(registration_no_column_name)
                 column_names_list = [x.strip() for x in column_names_list]
