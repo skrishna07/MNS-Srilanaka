@@ -223,7 +223,7 @@ def form20_main(db_config, config_dict, pdf_path, output_file_path, registration
                 logging.info(table_df)
                 column_names_list = column_names.split(',')
                 column_names_list = [x.strip() for x in column_names_list]
-                if sql_table_name == 'authorized_signatories':
+                if sql_table_name == 'authorized_signatories' and field_name == 'appointment_directors':
                     table_df['age'] = None
                     table_df['nationality'] = None
                     table_df['date_of_birth'] = None
