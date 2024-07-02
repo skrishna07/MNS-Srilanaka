@@ -92,7 +92,7 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, temp_pdf_pat
         open_ai_dict = {field_name: '' for field_name in straight_field_nodes if field_name not in exclude_fields}
         master_dict["Group"][0]["YYYY"] = str(open_ai_dict)
         master_dict["Company"][0]["YYYY"] = str(open_ai_dict)
-        prompt = config_dict['financial_prompt'] + '\n' + str(master_dict)
+        prompt = config_dict['financial_prompt'] + '\n' + str(master_dict) + '\n' + '\n' + str(config_dict['financial_example_prompt'])
         output = split_openai(extracted_text, prompt)
         try:
             output = re.sub(r'(?<=: ")(\d+(,\d+)*)(?=")', lambda x: x.group(1).replace(",", ""), output)
