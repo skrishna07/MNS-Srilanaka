@@ -11,7 +11,7 @@ import re
 from DatabaseQueries import update_database_single_value_financial
 
 
-def find_header_and_next_pages(pdf_path, header_fields, negative_fields ,fields):
+def find_header_and_next_pages(pdf_path, negative_fields ,fields):
     # Open the PDF file
     pdf_file = open(pdf_path, 'rb')
     pdf_reader = PyPDF2.PdfReader(pdf_file)
@@ -29,11 +29,10 @@ def find_header_and_next_pages(pdf_path, header_fields, negative_fields ,fields)
 
         # Combine text from both pages
         combined_text = (text1 or "") + "\n" + (text2 or "")
-        # print(combined_text.lower())
-        # print('\n')
-        # print('--------------------------------------------')
+        combined_text = combined_text.replace(',','')
+        numbers = re.findall(r'\b\d{5,}\b', combined_text)
         # Check if all fields are in the combined text
-        if combined_text and any(field in combined_text.lower() for field in header_fields) and any(field in combined_text.lower() for field in fields) and not any(neg_field in combined_text.lower() for neg_field in negative_fields)and page_num > 20:
+        if combined_text and any(field in combined_text.lower() for field in fields) and not any(neg_field in combined_text.lower() for neg_field in negative_fields) and page_num > 20 and len(numbers) >= 20:
             next_page = page_num + 2 if page_num + 2 < num_pages else None
             return page_num, next_page
     return None, None
@@ -63,7 +62,7 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, temp_pdf_pat
         header_fields = str(config_dict['financial_headers']).split(',')
         negative_fields = str(config_dict['financial_negative_headers']).split(',')
         fields = str(config_dict['financial_fields']).split(',')
-        starting_page, ending_page = find_header_and_next_pages(pdf_path, header_fields, negative_fields, fields)
+        starting_page, ending_page = find_header_and_next_pages(pdf_path, negative_fields, fields)
         if starting_page is not None:
             logging.info(f"Taking from page {starting_page + 1} to {ending_page + 1}")
         split_pdf(pdf_path, starting_page+1, ending_page+1, temp_pdf_path)

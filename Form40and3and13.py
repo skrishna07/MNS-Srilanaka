@@ -7,6 +7,7 @@ from AmazonOCR import extract_text_from_pdf
 from OpenAI import split_openai
 from ReadExcelConfig import create_main_config_dictionary
 from DatabaseQueries import get_db_credentials
+from DatabaseQueries import update_database_single_value_with_one_column_check
 from DatabaseQueries import update_database_single_value
 import traceback
 
@@ -18,10 +19,13 @@ def form40and3and13_main(db_config, config_dict, pdf_path, output_file_path, reg
     try:
         if 'form 40' in file_name.lower():
             form_keyword = config_dict['form40_keyword']
+            column_to_check = None
         elif 'form 3' in file_name.lower():
             form_keyword = config_dict['form3_keyword']
+            column_to_check = 'name'
         elif 'form 13' in file_name.lower():
             form_keyword = config_dict['form13_keyword']
+            column_to_check = 'previous_address'
         else:
             raise Exception("Invalid Form")
         map_file_sheet_name = config_dict['config_sheet']
@@ -55,6 +59,12 @@ def form40and3and13_main(db_config, config_dict, pdf_path, output_file_path, reg
         single_df = df_map[df_map[df_map.columns[1]] == config_dict['single_keyword']]
         registration_no_column_name = config_dict['registration_no_Column_name']
         sql_tables_list = single_df[single_df.columns[3]].unique()
+        if 'form 3' in file_name.lower():
+            value_to_check = single_df[single_df['Field_Name'] == 'name']['Value'].values[0]
+        elif 'form 13' in file_name.lower():
+            value_to_check = single_df[single_df['Field_Name'] == 'address_line']['Value'].values[0]
+        else:
+            value_to_check = None
         for table_name in sql_tables_list:
             table_df = single_df[single_df[single_df.columns[3]] == table_name]
             columns_list = table_df[table_df.columns[4]].unique()
@@ -69,9 +79,14 @@ def form40and3and13_main(db_config, config_dict, pdf_path, output_file_path, reg
                 json_string = json.dumps(json_dict)
                 logging.info(json_string)
                 try:
-                    update_database_single_value(db_config, table_name, registration_no_column_name,
-                                                 registration_no,
-                                                 column_name, json_string)
+                    if 'form 40' in file_name.lower():
+                        update_database_single_value(db_config, table_name,registration_no_column_name,
+                                                                           registration_no,
+                                                                           column_name, json_string)
+                    else:
+                        update_database_single_value_with_one_column_check(db_config, table_name, registration_no_column_name,
+                                                     registration_no,
+                                                     column_name, json_string, column_to_check, value_to_check)
                 except Exception as e:
                     logging.error(f"Exception {e} occurred while updating data in dataframe for {table_name} "
                                   f"with data {json_string}")

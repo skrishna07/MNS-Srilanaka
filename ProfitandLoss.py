@@ -29,11 +29,13 @@ def find_header_and_next_pages(pdf_path, header_fields, negative_fields ,fields)
 
         # Combine text from both pages
         combined_text = (text1 or "") + "\n" + (text2 or "")
+        combined_text = combined_text.replace(',', '')
+        numbers = re.findall(r'\b\d{5,}\b', combined_text)
         # print(combined_text.lower())
         # print('\n')
         # print('--------------------------------------------')
         # Check if all fields are in the combined text
-        if combined_text and any(field in combined_text.lower() for field in header_fields) and any(field in combined_text.lower() for field in fields) and not any(neg_field in combined_text.lower() for neg_field in negative_fields)and page_num > 20:
+        if combined_text and any(field in combined_text.lower() for field in header_fields) and any(field in combined_text.lower() for field in fields) and not any(neg_field in combined_text.lower() for neg_field in negative_fields) and page_num > 20 and len(numbers) >= 10:
             next_page = page_num + 2 if page_num + 2 < num_pages else None
             return page_num, next_page
     return None, None

@@ -527,3 +527,49 @@ def update_pnl_status(db_config, registration_no, database_id):
         connection.close()
     except Exception as e:
         logging.error(f"Error updating extraction status {e}")
+
+
+def update_database_single_value_with_one_column_check(db_config, table_name, registration_no_column_name, registration_no, column_name, column_value, column_to_check, value_to_check):
+    setup_logging()
+    db_connection = mysql.connector.connect(**db_config)
+    db_cursor = db_connection.cursor()
+    json_dict = json.loads(column_value)
+    num_elements = len(json_dict)
+    if num_elements == 1:
+        first_key = next(iter(json_dict))
+        first_value = json_dict[first_key]
+        column_value = first_value
+    else:
+        column_value = json.dumps(json_dict)
+
+    # check if there is already entry with cin
+    query = "SELECT * FROM {} WHERE {} = '{}' AND {} = '{}'".format(table_name, registration_no_column_name, registration_no, column_to_check, value_to_check)
+    logging.info(query)
+    try:
+        db_cursor.execute(query)
+    except mysql.connector.Error as err:
+        logging.info(err)
+    result = db_cursor.fetchall()
+    # logging.info(result)
+
+    # if cin value already exists
+    if len(result) > 0:
+        update_query = "UPDATE {} SET {} = '{}' WHERE {} = '{}' AND {} = '{}'".format(table_name, column_name,
+                                                                                      column_value, registration_no_column_name,
+                                                                                      registration_no,column_to_check,value_to_check)
+        logging.info(update_query)
+        db_cursor.execute(update_query)
+        logging.info("Updating")
+
+    # if cin value doesn't exist
+    else:
+        insert_query = "INSERT INTO {} ({}, {}) VALUES ('{}', '{}')".format(table_name, registration_no_column_name,
+                                                                                      column_name,
+                                                                                      registration_no,
+                                                                                      column_value)
+        logging.info(insert_query)
+        db_cursor.execute(insert_query)
+        logging.info("Inserting")
+    db_connection.commit()
+    db_cursor.close()
+    db_connection.close()
