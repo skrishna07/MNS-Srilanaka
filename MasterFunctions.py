@@ -25,6 +25,8 @@ import os
 from DatabaseQueries import get_financial_status
 from DatabaseQueries import update_finance_status
 from DatabaseQueries import update_pnl_status
+from FinalEmailTable import form13_table
+from Form6 import update_form15_percentage_holding
 
 
 def data_extraction_and_insertion(db_config, registration_no, config_dict):
@@ -55,6 +57,9 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
                         form6_extraction = form6_main(db_config, config_dict, document_download_path, output_path, registration_no, document_date, extraction_config)
                         if form6_extraction:
                             logging.info(f"Successfully extracted for {document_name}")
+                            form15_percentage_holding_update = update_form15_percentage_holding(db_config, registration_no)
+                            if form15_percentage_holding_update:
+                                logging.info(f"Successfully updated form15 percentage holding")
                             update_extraction_status(db_config, document_id, registration_no)
                     else:
                         if str(form15_date).strip() == str(document_date).strip():
@@ -162,7 +167,7 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
         raise Exception(errors)
     else:
         pending_files = extraction_pending_files(db_config, registration_no)
-        if len(pending_files) == 0:
+        if len(pending_files) <= 2:
             return True
         else:
             raise Exception(f"Multiple exceptions occurred while extracting:\n\n" + "\n".join(errors))
@@ -175,6 +180,8 @@ def json_loader_and_tables(db_config, config_excel_path, registration_no, receip
         root_path = config_dict['Root path']
         sheet_name = 'JSON_Loader_SQL_Queries'
         final_email_table = None
+        form13_file_table = None
+        no_of_form13 = None
         json_loader_status, json_file_path, json_nodes = json_loader(db_config, config_json_file_path, registration_no, root_path, config_excel_path, sheet_name, receipt_no)
         if json_loader_status:
             order_sheet_name = "JSON Non-LLP Order"
@@ -187,6 +194,7 @@ def json_loader_and_tables(db_config, config_excel_path, registration_no, receip
                 except Exception as e:
                     logging.error(f"Error occurred while ordering for {json_node} {e}")
             final_email_table = final_table(db_config, registration_no, database_id)
+            form13_file_table, no_of_form13 = form13_table(db_config, registration_no)
     except Exception as e:
         logging.error(f"Exception occurred while generating json loader {e}")
         tb = traceback.extract_tb(e.__traceback__)
@@ -195,4 +203,4 @@ def json_loader_and_tables(db_config, config_excel_path, registration_no, receip
                 errors.append(f"File {frame.filename},Line {frame.lineno}: {frame.line} - {str(e)}")
         raise Exception(errors)
     else:
-        return True, final_email_table, json_file_path
+        return True, final_email_table, json_file_path, form13_file_table, no_of_form13

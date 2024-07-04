@@ -47,6 +47,7 @@ def insert_datatable_with_table_form20(config_dict, db_config, sql_table_name, c
     registration_no = result_dict[registration_column_name]
     name_column_name = config_dict['name_column_name_in_db_directors']
     name = result_dict[name_column_name]
+    name = name.lower()
     nic_column_name = config_dict['nic_Column_name_directors']
     designation_column_name = config_dict['designation_column_name']
     designation = result_dict[designation_column_name]
@@ -66,6 +67,7 @@ def insert_datatable_with_table_form20(config_dict, db_config, sql_table_name, c
     name_found = False
     for directors in result:
         db_name = directors[2]
+        db_name = str(db_name).lower()
         intersection = set(db_name) & set(name)
         union = set(db_name) | set(name)
         similarity = len(intersection) / len(union)
@@ -228,13 +230,16 @@ def form20_main(db_config, config_dict, pdf_path, output_file_path, registration
                     table_df['nationality'] = None
                     table_df['date_of_birth'] = None
                     table_df['gender'] = None
+                    table_df['date_of_appointment'] = None
                     column_names_list.append('age')
                     column_names_list.append('nationality')
                     column_names_list.append('date_of_birth')
                     column_names_list.append('gender')
+                    column_names_list.append('date_of_appointment')
                     for index_dob, row_dob in table_df.iterrows():
                         try:
                             nic = str(row_dob['nic']).strip()
+                            date = str(row_dob['date']).strip()
                             details_dict = nic_dob_gender_details.get(nic)
                             date_of_birth = details_dict['Date of Birth']
                             gender = details_dict['Gender']
@@ -246,6 +251,21 @@ def form20_main(db_config, config_dict, pdf_path, output_file_path, registration
                             table_df.at[index_dob, 'nationality'] = nationality
                             table_df.at[index_dob, 'date_of_birth'] = date_of_birth
                             table_df.at[index_dob, 'gender'] = gender
+                            table_df.at[index_dob, 'date_of_appointment'] = date
+                        except Exception as e:
+                            logging.error(f"Exception {e} occurred while getting age")
+                            error_count += 1
+                            tb = traceback.extract_tb(e.__traceback__)
+                            for frame in tb:
+                                if frame.filename == __file__:
+                                    errors.append(f"Line {frame.lineno}: {frame.line} - {str(e)}")
+                if sql_table_name == 'authorized_signatories' and field_name == 'cessation_directors':
+                    table_df['date_of_cessation'] = None
+                    column_names_list.append('date_of_cessation')
+                    for index_cessation, row_cessation in table_df.iterrows():
+                        try:
+                            cessation_date = str(row_cessation['date']).strip()
+                            table_df.at[index_cessation, 'date_of_cessation'] = cessation_date
                         except Exception as e:
                             logging.error(f"Exception {e} occurred while getting age")
                             error_count += 1

@@ -97,3 +97,57 @@ def final_table(db_config, registration_no, database_id):
     except Exception as e:
         logging.info(f"Error in fetching final email table {e}")
         return None
+
+
+def form13_table(db_config, registration_no):
+    try:
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+        files_query = f"select document_name,document_date,document_extraction_status from documents where registration_no = '{registration_no}' and LOWER(document_name) like '%form 13%' and document_extraction_needed = 'Y'"
+        cursor.execute(files_query)
+        file_results = cursor.fetchall()
+        no_of_files_query = f"select count(*) from documents where registration_no = '{registration_no}' and LOWER(document_name) like '%form 13%' and document_extraction_needed = 'Y'"
+        cursor.execute(no_of_files_query)
+        no_of_files = cursor.fetchone()[0]
+        cursor.close()
+        connection.close()
+        # Create a new BeautifulSoup object
+        if len(file_results) != 0:
+            soup = BeautifulSoup(features="html.parser")
+
+            # Create the table element
+            table = soup.new_tag('table', style='width: 60%; border-collapse: collapse;')
+
+            # Create table headers
+            headers = ['Name', 'Date', 'Status']
+            header_row = soup.new_tag('tr')
+            for header in headers:
+                th = soup.new_tag('th', style='border: 1px solid black; padding: 8px;')
+                th.string = header
+                header_row.append(th)
+            table.append(header_row)
+
+            # Populate table with data
+            for result in file_results:
+                name = result[0]
+                date = result[1]
+                row = soup.new_tag('tr')
+                status = result[2]
+                # Add data to the row
+                data = [name, date, status]
+                for idx, item in enumerate(data):
+                    td = soup.new_tag('td', style='border: 1px solid black; padding: 8px;')
+                    td['style'] += 'color: black;'
+                    td.string = str(item)
+                    row.append(td)
+                table.append(row)
+            soup.append(table)
+
+            # Return the HTML table as a string
+            return str(soup), no_of_files
+        else:
+            soup = 'No Form 13 files available'
+            return soup, no_of_files
+    except Exception as e:
+        print(f"Exception in generating Directors Table {e}")
+        return None, None

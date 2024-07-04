@@ -131,6 +131,44 @@ def get_previous_total_equity_shares(db_config, registration_no):
         raise Exception(e)
 
 
+def update_form15_percentage_holding(db_config, registration_no):
+    setup_logging()
+    try:
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+        connection.autocommit = True
+        query = f"SELECT full_name,no_of_shares FROM `current_shareholdings` WHERE registration_no = '{registration_no}' and (updated_date is NULL or updated_date = '')"
+        logging.info(query)
+        cursor.execute(query)
+        shareholders_result = cursor.fetchall()
+        equity_shares_query = f"SELECT total_equity_shares from shareholdings_summary where registration_no = '{registration_no}'"
+        logging.info(equity_shares_query)
+        cursor.execute(equity_shares_query)
+        total_equity_shares = cursor.fetchone()[0]
+        try:
+            total_equity_shares = float(str(total_equity_shares).replace(',',''))
+        except:
+            pass
+        for shareholders in shareholders_result:
+            full_name = shareholders[0]
+            no_of_shares = shareholders[1]
+            try:
+                no_of_shares = float(str(no_of_shares).replace(',', ''))
+            except:
+                pass
+            updated_percentage_holding = (no_of_shares/total_equity_shares)*100
+            update_query = f"update current_shareholdings set percentage_holding = '{updated_percentage_holding}' where registration_no = '{registration_no}' and full_name = '{full_name}'"
+            logging.info(update_query)
+            cursor.execute(update_query)
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        logging.error(f"Error in updating form 15 percentage holding after running form 6 {e}")
+    else:
+        logging.info(f"Successfully updated form 15 percentage holding after running form 6")
+        return True
+
+
 def get_current_shareholdings_details(db_config, registration_no, name):
     try:
         connection = mysql.connector.connect(**db_config)

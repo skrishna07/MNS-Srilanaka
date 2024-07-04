@@ -573,3 +573,21 @@ def update_database_single_value_with_one_column_check(db_config, table_name, re
     db_connection.commit()
     db_cursor.close()
     db_connection.close()
+
+
+def get_legal_name_form15(db_config, registration_no):
+    setup_logging()
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    try:
+        legal_name_query = f"select legal_name from Company where registration_no = '{registration_no}'"
+        logging.info(legal_name_query)
+        cursor.execute(legal_name_query)
+        result = cursor.fetchone()[0]
+        return result
+    except Exception as e:
+        logging.info(f"Exception occurred while updating retry counter by {e}")
+        return None
+    finally:
+        cursor.close()
+        connection.close()

@@ -15,6 +15,7 @@ from MasterFunctions import json_loader_and_tables
 from TransactionalLog import generate_transactional_log
 from SendEmail import send_email
 from DatabaseQueries import update_bot_comments_empty
+from DatabaseQueries import get_legal_name_form15
 
 
 def main():
@@ -54,18 +55,19 @@ def main():
                                 update_workflow_status(db_config, database_id, 'Loader_pending')
                             update_locked_by_empty(db_config, database_id)
                         if str(workflow_status).lower() == 'loader_pending':
-                            loader_status, final_email_table, json_file_path = json_loader_and_tables(db_config, excel_file, registration_no, receipt_no, config_dict, database_id)
+                            loader_status, final_email_table, json_file_path, form13_final_table, no_of_form13 = json_loader_and_tables(db_config, excel_file, registration_no, receipt_no, config_dict, database_id)
                             if loader_status:
                                 logging.info(f"Successfully extracted JSON Loader for reg no - {registration_no}")
                                 update_workflow_status(db_config, database_id, 'Loader_generated')
                                 update_process_status(db_config, database_id, 'Completed')
                                 update_bot_comments_empty(db_config, registration_no, database_id)
                                 transactional_log_file_path = generate_transactional_log(db_config, config_dict)
+                                legal_name_form15 = get_legal_name_form15(db_config, registration_no)
                                 completed_subject = str(config_dict['cin_Completed_subject']).format(registration_no,
                                                                                                      receipt_no)
                                 completed_body = str(config_dict['cin_Completed_body']).format(registration_no,
-                                                                                               receipt_no, local_name,
-                                                                                               final_email_table)
+                                                                                               receipt_no, local_name, legal_name_form15,
+                                                                                               final_email_table, no_of_form13, form13_final_table)
                                 business_mails = str(config_dict['business_mail']).split(',')
                                 attachments.append(json_file_path)
                                 attachments.append(transactional_log_file_path)
