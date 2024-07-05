@@ -16,6 +16,7 @@ from TransactionalLog import generate_transactional_log
 from SendEmail import send_email
 from DatabaseQueries import update_bot_comments_empty
 from DatabaseQueries import get_legal_name_form15
+from DatabaseQueries import update_completed_status_api
 
 
 def main():
@@ -71,6 +72,9 @@ def main():
                                 business_mails = str(config_dict['business_mail']).split(',')
                                 attachments.append(json_file_path)
                                 attachments.append(transactional_log_file_path)
+                                api_update_status = update_completed_status_api(receipt_no, config_dict)
+                                if api_update_status:
+                                    logging.info(f"Successfully updated in API for Receipt No - {receipt_no}")
                                 try:
                                     send_email(config_dict, completed_subject, completed_body, business_mails,
                                                attachments)
