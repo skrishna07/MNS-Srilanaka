@@ -107,11 +107,13 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
                         update_extraction_status(db_config, document_id, registration_no)
                 elif 'financial' in str(document_name).lower():
                     temp_pdf_directory = os.path.dirname(document_download_path)
-                    temp_pdf_name_finance = 'temp_finance_' + document_name
+                    pdf_document_name = os.path.basename(document_download_path)
+                    pdf_document_name = str(pdf_document_name).replace('.pdf','')
+                    temp_pdf_name_finance = 'temp_finance_' + pdf_document_name
                     if '.pdf' not in temp_pdf_name_finance:
                         temp_pdf_name_finance = temp_pdf_name_finance + '.pdf'
                     temp_pdf_path_finance = os.path.join(temp_pdf_directory, temp_pdf_name_finance)
-                    finance_output_file_name = 'finance_' + document_name
+                    finance_output_file_name = 'finance_' + pdf_document_name
                     if '.xlsx' not in finance_output_file_name:
                         finance_output_file_name = finance_output_file_name + '.xlsx'
                     finance_output_file_path = os.path.join(temp_pdf_directory, finance_output_file_name)
@@ -123,11 +125,11 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
                             update_finance_status(db_config, registration_no, document_id)
                     else:
                         logging.info(f"Already extracted for assets and liabilities")
-                    temp_pdf_name_pnl = 'temp_pnl_' + document_name
+                    temp_pdf_name_pnl = 'temp_pnl_' + pdf_document_name
                     if '.pdf' not in temp_pdf_name_pnl:
                         temp_pdf_name_pnl = temp_pdf_name_pnl + '.pdf'
                     temp_pdf_path_pnl = os.path.join(temp_pdf_directory, temp_pdf_name_pnl)
-                    pnl_output_file_name = 'pnl_' + document_name
+                    pnl_output_file_name = 'pnl_' + pdf_document_name
                     if '.xlsx' not in pnl_output_file_name:
                         pnl_output_file_name = pnl_output_file_name + '.xlsx'
                     pnl_output_path = os.path.join(temp_pdf_directory, pnl_output_file_name)
