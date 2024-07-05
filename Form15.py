@@ -177,11 +177,13 @@ def form15_main(db_config, config_dict, pdf_path, output_file_path, registration
                     column_names_list.append('percentage_holding')
                     try:
                         total_equity_shares = single_df[single_df['Field_Name'] == 'total_equity_shares']['Value'].values[0]
+                        total_equity_shares = str(total_equity_shares)
                         total_equity_shares = str(total_equity_shares).replace(',','')
                         total_equity_shares = int(total_equity_shares)
                         for index_share, row_share in table_df.iterrows():
                             try:
-                                no_of_shares = row_share['no_of_shares'].replace(',', '')
+                                no_of_shares = str(row_share['no_of_shares'])
+                                no_of_shares = no_of_shares.replace(',', '')
                                 no_of_shares = int(no_of_shares)
                                 percentage_holding = (no_of_shares / total_equity_shares)*100
                             except Exception as e:
