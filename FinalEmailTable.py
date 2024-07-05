@@ -1,0 +1,153 @@
+import mysql.connector
+from bs4 import BeautifulSoup
+from PythonLogging import setup_logging
+import logging
+
+
+def final_table(db_config, registration_no, database_id):
+    setup_logging()
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Define the CIN number
+
+        # Execute query to fetch data
+        query = f"""
+            SELECT 
+                lei_status, lei_comments,
+                legal_cases_status, legal_cases_comments,
+                stock_exchange_status,stock_excahnge_comments,
+                credit_rating_status, credit_rating_comments
+            FROM orders
+            WHERE registration_no = '{registration_no}' and id = {database_id}
+        """
+
+        cursor.execute(query)
+        result = cursor.fetchone()
+
+        # Close the database connection
+        conn.close()
+
+        # Format the data into a table
+        html_table = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        table {{
+            border-collapse: collapse;
+            width: 60%;
+        }}
+        th, td {{
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+            width: 20%;
+        }}
+        th {{
+            background-color: #f2f2f2;
+        }}
+        tr.red {{
+            background-color: red;
+            color: black;
+        }}
+    </style>
+</head>
+<body>
+    <table>
+        <tr>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Comments</th>
+        </tr>
+        <tr class="{ 'red' if result[0] in ['N', 'P'] else '' }">
+            <td>LEI</td>
+            <td>{result[0]}</td>
+            <td>{result[1] if result[1] is not None else ''}</td>
+        </tr>
+        <tr class="{ 'red' if result[2] in ['N', 'P'] else '' }">
+            <td>Legal cases</td>
+            <td>{result[2]}</td>
+            <td>{result[3] if result[3] is not None else ''}</td>
+        </tr>
+        <tr class="{ 'red' if result[4] in ['N', 'P'] else '' }">
+            <td>Stock Exchange</td>
+            <td>{result[4]}</td>
+            <td>{result[5] if result[5] is not None else ''}</td>
+        </tr>
+        <tr class="{ 'red' if result[6] in ['N', 'P'] else '' }">
+            <td>Credit Ratings</td>
+            <td>{result[6]}</td>
+            <td>{result[7] if result[7] is not None else ''}</td>
+        </tr>
+    </table>
+</body>
+</html>
+"""
+
+        # Use BeautifulSoup to format the HTML table
+        soup = BeautifulSoup(html_table, 'html.parser')
+        formatted_table = soup.prettify()
+
+        # Print or use the formatted table
+        logging.info(formatted_table)
+        # Print or store the table
+        return formatted_table
+    except Exception as e:
+        logging.info(f"Error in fetching final email table {e}")
+        return None
+
+
+def form13_table(db_config, registration_no):
+    try:
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+        files_query = f"select document_name,document_date,document_extraction_status from documents where registration_no = '{registration_no}' and LOWER(document_name) like '%form 13%' and document_extraction_needed = 'Y'"
+        cursor.execute(files_query)
+        file_results = cursor.fetchall()
+        no_of_files_query = f"select count(*) from documents where registration_no = '{registration_no}' and LOWER(document_name) like '%form 13%' and document_extraction_needed = 'Y'"
+        cursor.execute(no_of_files_query)
+        no_of_files = cursor.fetchone()[0]
+        cursor.close()
+        connection.close()
+        # Create a new BeautifulSoup object
+        if len(file_results) != 0:
+            soup = BeautifulSoup(features="html.parser")
+
+            # Create the table element
+            table = soup.new_tag('table', style='width: 60%; border-collapse: collapse;')
+
+            # Create table headers
+            headers = ['Name', 'Date', 'Status']
+            header_row = soup.new_tag('tr')
+            for header in headers:
+                th = soup.new_tag('th', style='border: 1px solid black; padding: 8px;')
+                th.string = header
+                header_row.append(th)
+            table.append(header_row)
+
+            # Populate table with data
+            for result in file_results:
+                name = result[0]
+                date = result[1]
+                row = soup.new_tag('tr')
+                status = result[2]
+                # Add data to the row
+                data = [name, date, status]
+                for idx, item in enumerate(data):
+                    td = soup.new_tag('td', style='border: 1px solid black; padding: 8px;')
+                    td['style'] += 'color: black;'
+                    td.string = str(item)
+                    row.append(td)
+                table.append(row)
+            soup.append(table)
+
+            # Return the HTML table as a string
+            return str(soup), no_of_files
+        else:
+            soup = 'No Form 13 files available'
+            return soup, no_of_files
+    except Exception as e:
+        print(f"Exception in generating Directors Table {e}")
+        return None, None
