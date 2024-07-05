@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 import json
 import traceback
+import requests
 
 
 def fetch_orders_to_extract_data(db_config):
@@ -591,3 +592,27 @@ def get_legal_name_form15(db_config, registration_no):
     finally:
         cursor.close()
         connection.close()
+
+
+def update_completed_status_api(orderid, config_dict):
+    setup_logging()
+    try:
+        url = config_dict['update_api_url']
+
+        payload = json.dumps({
+            "receiptnumber": orderid,
+            "status": 2
+        })
+        headers = {
+            'Authorization': config_dict['Authorization'],
+            'Content-Type': 'application/json',
+            'Cookie': config_dict['Cookie']
+        }
+
+        response = requests.request("POST", url, headers=headers, data=payload)
+        logging.info(response.text)
+    except Exception as e:
+        logging.info(f"Error in updating status in API {e}")
+        return False
+    else:
+        return True
