@@ -49,9 +49,20 @@ def extract_text_from_pdf(pdf_file_path):
     if status == 'SUCCEEDED':
         # Extract and return the text
         extracted_text = ''
-        for item in result['Blocks']:
-            if item['BlockType'] == 'LINE':
-                extracted_text += item['Text'] + '\n'
+        next_token = None
+        while True:
+            if next_token:
+                result = textract_client.get_document_text_detection(JobId=job_id, NextToken=next_token)
+            else:
+                result = textract_client.get_document_text_detection(JobId=job_id)
+
+            for item in result['Blocks']:
+                if item['BlockType'] == 'LINE':
+                    extracted_text += item['Text'] + '\n'
+
+            next_token = result.get('NextToken')
+            if not next_token:
+                break
         return extracted_text.strip()
     else:
         # Handle the case where the job failed
