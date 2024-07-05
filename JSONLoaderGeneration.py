@@ -90,6 +90,8 @@ def json_loader(db_config, config_json_file_path, registration_no, root_path, ex
                     continue
                 if json_node == 'contact_details':
                     query = company_query.format(registration_no, registration_no, registration_no)
+                elif json_node == 'financials':
+                    query = company_query.format(registration_no, registration_no)
                 else:
                     query = company_query.format(registration_no)
                 logging.info(query)

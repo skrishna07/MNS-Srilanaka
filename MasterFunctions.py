@@ -27,6 +27,7 @@ from DatabaseQueries import update_finance_status
 from DatabaseQueries import update_pnl_status
 from FinalEmailTable import form13_table
 from Form6 import update_form15_percentage_holding
+from Holding_Entities import get_holding_entities
 
 
 def data_extraction_and_insertion(db_config, registration_no, config_dict):
@@ -151,6 +152,10 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
                 for frame in tb:
                     if frame.filename == __file__:
                         errors.append(f"File - {frame.filename},Line {frame.lineno}: {frame.line} - {str(e)}")
+        try:
+            get_holding_entities(db_config,registration_no,config_dict)
+        except Exception as e:
+            logging.error(f"Error in fetching holding entities {e}")
         try:
             split_address(registration_no, config_dict, db_config)
         except Exception as e:
