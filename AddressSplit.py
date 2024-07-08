@@ -103,6 +103,8 @@ def split_address(registration_no,config_dict,db_config):
                     registered_splitted_address = json.loads(registered_splitted_address)
                 except Exception as e:
                     registered_splitted_address = eval(registered_splitted_address)
+                registered_splitted_address['address_line2'] = registered_splitted_address['address_line1']
+                registered_splitted_address['address_line1'] = registered_address_to_split
                 address_line1 = registered_splitted_address['address_line1']
                 address_line2 = registered_splitted_address['address_line2']
                 city = registered_splitted_address['city']
