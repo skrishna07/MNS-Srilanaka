@@ -616,3 +616,23 @@ def update_completed_status_api(orderid, config_dict):
         return False
     else:
         return True
+
+
+def update_end_time(db_config, registration_no, database_id):
+    try:
+        setup_logging()
+        current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+        connection.autocommit = True
+        check_query = f"SELECT end_time FROM orders WHERE registration_no = '{registration_no}' and id = {database_id}"
+        cursor.execute(check_query)
+        result = cursor.fetchone()
+        if result is not None and result[0] is None:
+            update_query = f"update orders set end_time = '{current_datetime}' where registration_no = '{registration_no}' and id = {database_id}"
+            logging.info(update_query)
+            cursor.execute(update_query)
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        logging.info(f"Error updating end time {e}")

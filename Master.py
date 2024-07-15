@@ -17,6 +17,7 @@ from SendEmail import send_email
 from DatabaseQueries import update_bot_comments_empty
 from DatabaseQueries import get_legal_name_form15
 from DatabaseQueries import update_completed_status_api
+from DatabaseQueries import update_end_time
 
 
 def main():
@@ -62,6 +63,7 @@ def main():
                                 update_workflow_status(db_config, database_id, 'Loader_generated')
                                 update_process_status(db_config, database_id, 'Completed')
                                 update_bot_comments_empty(db_config, registration_no, database_id)
+                                update_end_time(db_config, registration_no, database_id)
                                 transactional_log_file_path = generate_transactional_log(db_config, config_dict)
                                 legal_name_form15 = get_legal_name_form15(db_config, registration_no)
                                 completed_subject = str(config_dict['cin_Completed_subject']).format(registration_no,
