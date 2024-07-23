@@ -5,6 +5,7 @@ from PythonLogging import setup_logging
 import os
 import logging
 from AmazonOCR import extract_text_from_pdf
+from Amazon_OCR_Page_Specific import extract_text_from_pdf_specific_page
 from OpenAI import split_openai
 from ReadExcelConfig import create_main_config_dictionary
 from DatabaseQueries import get_db_credentials
@@ -85,7 +86,7 @@ def form10_main(db_config, config_dict, pdf_path, output_file_path, registration
             main_node = row['main_dict_node']
             sub_list = {main_node: [sub_dict]}
             open_ai_dict.update(sub_list)
-        pdf_text = extract_text_from_pdf(pdf_path)
+        pdf_text = extract_text_from_pdf_specific_page(pdf_path)
         form10_prompt = config_dict['form10_prompt'] + '\n' + str(open_ai_dict)
         output = split_openai(pdf_text, form10_prompt)
         try:
