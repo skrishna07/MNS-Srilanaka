@@ -142,6 +142,9 @@ def form15_main(db_config, config_dict, pdf_path, output_file_path, registration
                 column_names = str(row.iloc[4]).strip()
                 main_group_node = str(row.iloc[6]).strip()
                 value_list = row['Value']
+                if len(value_list) == 0:
+                    logging.info(f"No value for {field_name} so going to next field")
+                    continue
                 table_df = pd.DataFrame(value_list)
                 logging.info(table_df)
                 column_names_list = column_names.split(',')
