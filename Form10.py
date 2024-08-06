@@ -111,10 +111,6 @@ def form10_main(db_config, config_dict, pdf_path, output_file_path, registration
                 value = output.get(main_group_node)
             else:
                 value = None
-            try:
-                value = str(value).replace('"', '')
-            except:
-                pass
             df_map.at[index, 'Value'] = value
         group_df = df_map[df_map[df_map.columns[1]] == config_dict['group_keyword']]
         registration_no_column_name = config_dict['registration_no_Column_name']
@@ -128,6 +124,7 @@ def form10_main(db_config, config_dict, pdf_path, output_file_path, registration
                 main_group_node = str(row.iloc[6]).strip()
                 value_list = row['Value']
                 table_df = pd.DataFrame(value_list)
+                table_df = table_df.applymap(lambda x: x.replace('"', '') if isinstance(x, str) else x)
                 logging.info(table_df)
                 column_names_list = column_names.split(',')
                 column_names_list = [x.strip() for x in column_names_list]
