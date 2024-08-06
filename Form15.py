@@ -18,6 +18,8 @@ from DatabaseQueries import get_db_credentials
 from DatabaseQueries import update_database_single_value
 from DatabaseQueries import insert_datatable_with_table_director
 import traceback
+from DatabaseQueries import remove_string
+from DatabaseQueries import remove_text_before_marker
 
 
 def get_age(DOB):
@@ -68,6 +70,8 @@ def form15_main(db_config, config_dict, pdf_path, output_file_path, registration
         pdf_text = extract_text_from_pdf(pdf_path)
         form15_prompt = config_dict['form15_prompt'] + '\n' + str(open_ai_dict) + '\n' + config_dict['form15_note_prompt']
         output = split_openai(pdf_text, form15_prompt)
+        output = remove_text_before_marker(output, "```json")
+        output = remove_string(output, "```")
         logging.info(output)
         nic_list = []
         try:

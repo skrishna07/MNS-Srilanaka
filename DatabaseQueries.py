@@ -636,3 +636,16 @@ def update_end_time(db_config, registration_no, database_id):
         connection.close()
     except Exception as e:
         logging.info(f"Error updating end time {e}")
+
+
+def remove_text_before_marker(text, marker):
+    index = text.find(marker)
+    if index != -1:
+        return text[index + len(marker):]
+    return text
+
+
+def remove_string(text, string_to_remove):
+    if string_to_remove in text:
+        text = text.replace(string_to_remove, "")
+    return text

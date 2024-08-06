@@ -3,6 +3,8 @@ import mysql.connector
 import logging
 from PythonLogging import setup_logging
 from OpenAI import split_openai
+from DatabaseQueries import remove_string
+from DatabaseQueries import remove_text_before_marker
 
 
 def split_address(registration_no,config_dict,db_config):
@@ -27,6 +29,8 @@ def split_address(registration_no,config_dict,db_config):
                 cursor = connection.cursor()
                 connection.autocommit = True
                 splitted_address = split_openai(address_to_split,prompt)
+                splitted_address = remove_text_before_marker(splitted_address, "```json")
+                splitted_address = remove_string(splitted_address, "```")
                 try:
                     splitted_address = json.loads(splitted_address)
                 except Exception as e:
@@ -63,6 +67,8 @@ def split_address(registration_no,config_dict,db_config):
                 cursor = connection.cursor()
                 connection.autocommit = True
                 previous_splitted_address = split_openai(previous_address_to_split, prompt)
+                previous_splitted_address = remove_text_before_marker(previous_splitted_address, "```json")
+                previous_splitted_address = remove_string(previous_splitted_address, "```")
                 try:
                     previous_splitted_address = json.loads(previous_splitted_address)
                 except Exception as e:
@@ -99,6 +105,8 @@ def split_address(registration_no,config_dict,db_config):
                 cursor = connection.cursor()
                 connection.autocommit = True
                 registered_splitted_address = split_openai(registered_address_to_split, prompt)
+                registered_splitted_address = remove_text_before_marker(registered_splitted_address, "```json")
+                registered_splitted_address = remove_string(registered_splitted_address, "```")
                 try:
                     registered_splitted_address = json.loads(registered_splitted_address)
                 except Exception as e:
