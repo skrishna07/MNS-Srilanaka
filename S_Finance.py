@@ -9,6 +9,8 @@ import os
 import pandas as pd
 import re
 from DatabaseQueries import update_database_single_value_financial
+from DatabaseQueries import remove_string
+from DatabaseQueries import remove_text_before_marker
 
 
 def find_header_and_next_pages(pdf_path, negative_fields ,fields):
@@ -93,6 +95,8 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, temp_pdf_pat
         master_dict["Company"][0]["YYYY"] = str(open_ai_dict)
         prompt = config_dict['financial_prompt'] + '\n' + str(master_dict) + '\n' + '\n' + str(config_dict['financial_example_prompt'])
         output = split_openai(extracted_text, prompt)
+        output = remove_text_before_marker(output, "```json")
+        output = remove_string(output, "```")
         try:
             output = re.sub(r'(?<=: ")(\d+(,\d+)*)(?=")', lambda x: x.group(1).replace(",", ""), output)
         except:

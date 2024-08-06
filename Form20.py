@@ -11,6 +11,8 @@ from DatabaseQueries import get_db_credentials
 import traceback
 from Form15 import get_gender_dob
 from datetime import datetime
+from DatabaseQueries import remove_string
+from DatabaseQueries import remove_text_before_marker
 
 
 def get_age(DOB):
@@ -181,6 +183,8 @@ def form20_main(db_config, config_dict, pdf_path, output_file_path, registration
         pdf_text = extract_text_from_pdf(pdf_path)
         form20_prompt = config_dict['form20_prompt'] + '\n' + str(open_ai_dict)
         output = split_openai(pdf_text, form20_prompt)
+        output = remove_text_before_marker(output, "```json")
+        output = remove_string(output, "```")
         logging.info(output)
         nic_list = []
         try:

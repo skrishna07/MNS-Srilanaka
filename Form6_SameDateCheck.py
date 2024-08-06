@@ -5,6 +5,8 @@ from OpenAI import split_openai
 from AmazonOCR import extract_text_from_pdf
 import json
 from datetime import datetime
+from DatabaseQueries import remove_string
+from DatabaseQueries import remove_text_before_marker
 
 
 def form6_same_date_check(db_config, registration_no, config_dict, form6_pdf_path):
@@ -22,6 +24,8 @@ def form6_same_date_check(db_config, registration_no, config_dict, form6_pdf_pat
         connection.close()
         form6_text = extract_text_from_pdf(form6_pdf_path)
         output = split_openai(form6_text, config_dict['form6_check_prompt'])
+        output = remove_text_before_marker(output, "```json")
+        output = remove_string(output, "```")
         logging.info(output)
         try:
             output = eval(output)

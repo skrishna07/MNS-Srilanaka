@@ -10,6 +10,8 @@ from DatabaseQueries import get_db_credentials
 from DatabaseQueries import update_database_single_value_with_one_column_check
 from DatabaseQueries import update_database_single_value
 import traceback
+from DatabaseQueries import remove_string
+from DatabaseQueries import remove_text_before_marker
 
 
 def form40and3and13_main(db_config, config_dict, pdf_path, output_file_path, registration_no,file_name, extraction_config):
@@ -43,6 +45,8 @@ def form40and3and13_main(db_config, config_dict, pdf_path, output_file_path, reg
         pdf_text = extract_text_from_pdf(pdf_path)
         form10_prompt = config_dict['common_prompt'] + '\n' + str(open_ai_dict)
         output = split_openai(pdf_text, form10_prompt)
+        output = remove_text_before_marker(output, "```json")
+        output = remove_string(output, "```")
         logging.info(output)
         try:
             output = eval(output)

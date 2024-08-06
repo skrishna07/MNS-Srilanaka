@@ -21,7 +21,7 @@ def split_openai(text, initial_prompt):
             }
         ],
         "temperature": 0.7,
-        "max_tokens": 4000,
+        "max_tokens": 4096,
         "top_p": 1,
         "frequency_penalty": 0,
         "presence_penalty": 0

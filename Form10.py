@@ -11,6 +11,8 @@ from ReadExcelConfig import create_main_config_dictionary
 from DatabaseQueries import get_db_credentials
 import traceback
 import re
+from DatabaseQueries import remove_string
+from DatabaseQueries import remove_text_before_marker
 
 
 def insert_datatable_with_table_form10(config_dict, db_config, sql_table_name, column_names_list, df_row):
@@ -89,6 +91,8 @@ def form10_main(db_config, config_dict, pdf_path, output_file_path, registration
         pdf_text = extract_text_from_pdf_specific_page(pdf_path)
         form10_prompt = config_dict['form10_prompt'] + '\n' + str(open_ai_dict)
         output = split_openai(pdf_text, form10_prompt)
+        output = remove_text_before_marker(output, "```json")
+        output = remove_string(output, "```")
         try:
             output = re.sub(r'(?<=: ")(\d+(,\d+)*)(?=")', lambda x: x.group(1).replace(",", ""), output)
         except:

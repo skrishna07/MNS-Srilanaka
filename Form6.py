@@ -10,6 +10,8 @@ from ReadExcelConfig import create_main_config_dictionary
 from DatabaseQueries import get_db_credentials
 from DatabaseQueries import update_database_single_value
 import traceback
+from DatabaseQueries import remove_string
+from DatabaseQueries import remove_text_before_marker
 
 
 def insert_datatable_with_table_director_form6(config_dict, db_config, sql_table_name, column_names_list, df_row, form_date):
@@ -228,6 +230,8 @@ def form6_main(db_config, config_dict, pdf_path, output_file_path, registration_
         pdf_text = extract_text_from_pdf(pdf_path)
         form15_prompt = config_dict['form6_prompt'] + '\n' + str(open_ai_dict)
         output = split_openai(pdf_text, form15_prompt)
+        output = remove_text_before_marker(output, "```json")
+        output = remove_string(output, "```")
         logging.info(output)
         try:
             output = eval(output)
