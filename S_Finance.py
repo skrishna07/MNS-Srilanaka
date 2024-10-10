@@ -89,10 +89,10 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, temp_pdf_pat
                             (financial_df['Node'] != 'null')]
         straight_field_nodes = straight_df['Node'].unique()
         exclude_fields = ['year', 'financial_year', 'nature', 'filing_type', 'filing_standard']
-        master_dict = {"Group": [{'YYYY': ""}], "Company": [{'YYYY': ""}]}
+        master_dict = {"Group": [{'YYYY-MM-DD': ""}], "Company": [{'YYYY-MM-DD': ""}]}
         open_ai_dict = {field_name: '' for field_name in straight_field_nodes if field_name not in exclude_fields}
-        master_dict["Group"][0]["YYYY"] = str(open_ai_dict)
-        master_dict["Company"][0]["YYYY"] = str(open_ai_dict)
+        master_dict["Group"][0]["YYYY-MM-DD"] = str(open_ai_dict)
+        master_dict["Company"][0]["YYYY-MM-DD"] = str(open_ai_dict)
         prompt = config_dict['financial_prompt'] + '\n' + str(master_dict) + '\n' + '\n' + str(config_dict['financial_example_prompt'])
         output = split_openai(extracted_text, prompt)
         output = remove_text_before_marker(output, "```json")
@@ -107,15 +107,34 @@ def finance_main(db_config, config_dict, pdf_path, registration_no, temp_pdf_pat
         except:
             output = json.loads(output)
         try:
+            # Handle Group Output
             if len(output["Group"]) != 0:
-                group_output = output["Group"][0]
+                # If the first structure is detected (list of dictionaries per year)
+                if isinstance(output["Group"][0], dict):
+                    # For first structure where years are inside dictionaries
+                    group_output = {}
+                    for item in output["Group"]:
+                        group_output.update(item)
+                else:
+                    # For second structure where years are keys within the first dictionary
+                    group_output = output["Group"][0]
             else:
                 group_output = {}
         except:
             group_output = {}
+
         try:
+            # Handle Company Output
             if len(output["Company"]) != 0:
-                company_output = output["Company"][0]
+                # If the first structure is detected (list of dictionaries per year)
+                if isinstance(output["Company"][0], dict):
+                    # For first structure where years are inside dictionaries
+                    company_output = {}
+                    for item in output["Company"]:
+                        company_output.update(item)
+                else:
+                    # For second structure where years are keys within the first dictionary
+                    company_output = output["Company"][0]
             else:
                 company_output = {}
         except:
