@@ -178,7 +178,7 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
         if len(pending_files) <= 2:
             return True
         else:
-            raise Exception("\n".join(errors))
+            raise Exception("\n \n".join(errors))
 
 
 def json_loader_and_tables(db_config, config_excel_path, registration_no, receipt_no, config_dict, database_id):
