@@ -254,4 +254,5 @@ def profit_and_loss_main(db_config, config_dict, pdf_path, registration_no, temp
             logging.info(f"Successfully extracted for Form 6")
             return True
         else:
+            logging.error("\n".join(errors))
             raise Exception("\n".join(errors))

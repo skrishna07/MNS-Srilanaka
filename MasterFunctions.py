@@ -172,12 +172,14 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
         for frame in tb:
             if frame.filename == __file__:
                 errors.append(f"File {frame.filename},Line {frame.lineno}: {frame.line} - {str(e)}")
+        logging.error("\n".join(errors))
         raise Exception(errors)
     else:
         pending_files = extraction_pending_files(db_config, registration_no)
         if len(pending_files) <= 2:
             return True
         else:
+            logging.error("\n".join(errors))
             raise Exception("\n \n".join(errors))
 
 

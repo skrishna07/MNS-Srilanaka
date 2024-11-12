@@ -163,10 +163,12 @@ def form10_main(db_config, config_dict, pdf_path, output_file_path, registration
         for frame in tb:
             if frame.filename == __file__:
                 errors.append(f"Line {frame.lineno}: {frame.line} - {str(e)}")
-        raise Exception(errors)
+        logging.error("\n".join(errors))
+        raise Exception("\n".join(errors))
     else:
         if error_count == 0:
             logging.info(f"Successfully extracted for Form 6")
             return True
         else:
+            logging.error("\n".join(errors))
             raise Exception("\n".join(errors))
