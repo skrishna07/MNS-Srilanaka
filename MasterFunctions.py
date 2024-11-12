@@ -178,7 +178,7 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
         if len(pending_files) <= 2:
             return True
         else:
-            raise Exception(f"Multiple exceptions occurred while extracting:\n\n" + "\n".join(errors))
+            raise Exception("\n".join(errors))
 
 
 def json_loader_and_tables(db_config, config_excel_path, registration_no, receipt_no, config_dict, database_id):
@@ -211,6 +211,6 @@ def json_loader_and_tables(db_config, config_excel_path, registration_no, receip
         for frame in tb:
             if frame.filename == __file__:
                 errors.append(f"File {frame.filename},Line {frame.lineno}: {frame.line} - {str(e)}")
-        raise Exception(errors)
+        raise Exception('\n'.join(errors))
     else:
         return True, final_email_table, json_file_path, form13_file_table, no_of_form13, financial_table

@@ -415,4 +415,4 @@ def form6_main(db_config, config_dict, pdf_path, output_file_path, registration_
             logging.info(f"Successfully extracted for Form 6")
             return True
         else:
-            raise Exception(f"Multiple exceptions occurred:\n\n" + "\n".join(errors))
+            raise Exception("\n".join(errors))
