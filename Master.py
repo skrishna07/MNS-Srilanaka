@@ -85,6 +85,7 @@ def main():
                             update_locked_by_empty(db_config, database_id)
                     except Exception as e:
                         logging.error(f"Exception occurred for Reg no - {registration_no} \n {e}")
+                        e = str(e).replace('\n', '<br>')
                         retry_count = get_retry_count(db_config, registration_no, database_id)
                         if retry_count is not None:
                             if retry_count == '':
