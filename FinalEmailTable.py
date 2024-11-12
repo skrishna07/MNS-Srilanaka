@@ -155,6 +155,7 @@ def form13_table(db_config, registration_no):
         return None, None
 
 def financials_table(db_config, registration_no):
+    setup_logging()
     try:
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor()
@@ -194,8 +195,8 @@ def financials_table(db_config, registration_no):
                 pass
             taxonomy = result[10]
             nature = result[8]
-            subtotals = result[14]
-            pnl_items = result[15]
+            subtotals = result[13]
+            pnl_items = result[14]
             subtotals_dict = json.loads(subtotals)
             pnl_dict = json.loads(pnl_items)
             try:
@@ -233,5 +234,5 @@ def financials_table(db_config, registration_no):
         # Return the HTML table as a string
         return str(soup)
     except Exception as e:
-        print(f"Exception in generating Fianancials Table {e}")
+        logging.info(f"Exception in generating Fianancials Table {e}")
         return None
