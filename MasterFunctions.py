@@ -28,6 +28,7 @@ from DatabaseQueries import update_pnl_status
 from FinalEmailTable import form13_table
 from Form6 import update_form15_percentage_holding
 from Holding_Entities import get_holding_entities
+from FinalEmailTable import financials_table
 
 
 def data_extraction_and_insertion(db_config, registration_no, config_dict):
@@ -189,6 +190,7 @@ def json_loader_and_tables(db_config, config_excel_path, registration_no, receip
         final_email_table = None
         form13_file_table = None
         no_of_form13 = None
+        financial_table = None
         json_loader_status, json_file_path, json_nodes = json_loader(db_config, config_json_file_path, registration_no, root_path, config_excel_path, sheet_name, receipt_no)
         if json_loader_status:
             order_sheet_name = "JSON Non-LLP Order"
@@ -202,6 +204,7 @@ def json_loader_and_tables(db_config, config_excel_path, registration_no, receip
                     logging.error(f"Error occurred while ordering for {json_node} {e}")
             final_email_table = final_table(db_config, registration_no, database_id)
             form13_file_table, no_of_form13 = form13_table(db_config, registration_no)
+            financial_table = financials_table(db_config, registration_no)
     except Exception as e:
         logging.error(f"Exception occurred while generating json loader {e}")
         tb = traceback.extract_tb(e.__traceback__)
@@ -210,4 +213,4 @@ def json_loader_and_tables(db_config, config_excel_path, registration_no, receip
                 errors.append(f"File {frame.filename},Line {frame.lineno}: {frame.line} - {str(e)}")
         raise Exception(errors)
     else:
-        return True, final_email_table, json_file_path, form13_file_table, no_of_form13
+        return True, final_email_table, json_file_path, form13_file_table, no_of_form13, financial_table
