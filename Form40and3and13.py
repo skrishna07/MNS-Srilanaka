@@ -115,4 +115,5 @@ def form40and3and13_main(db_config, config_dict, pdf_path, output_file_path, reg
             logging.info(f"Successfully extracted for Form 40")
             return True
         else:
-            raise Exception(f"Multiple exceptions occurred:\n\n" + "\n".join(errors))
+            logging.error("\n".join(errors))
+            raise Exception("\n".join(errors))
