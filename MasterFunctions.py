@@ -29,6 +29,10 @@ from FinalEmailTable import form13_table
 from Form6 import update_form15_percentage_holding
 from Holding_Entities import get_holding_entities
 from FinalEmailTable import financials_table
+from DatabaseQueries import get_split_status
+from Split_Scanned_Pdf import split_pdf_based_on_headers_and_fields
+from DatabaseQueries import update_split_status_and_split_pdf_path
+from New_tags_table import new_tags_table
 
 
 def data_extraction_and_insertion(db_config, registration_no, config_dict):
@@ -108,6 +112,22 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
                         logging.info(f"Successfully extracted for {document_name}")
                         update_extraction_status(db_config, document_id, registration_no)
                 elif 'financial' in str(document_name).lower():
+                    split_status = get_split_status(db_config, registration_no, document_id)
+                    if str(split_status).lower() != 'y':
+                        header_keywords = str(config_dict['headers']).split(',')
+                        field_keywords = str(config_dict['fields']).split(',')
+                        content_keywords = str(config_dict['contents']).split(',')
+                        # Get the directory where the document is located
+                        temp_pdf_directory = os.path.dirname(document_download_path)
+                        pdf_document_name = os.path.basename(document_download_path)
+                        pdf_document_name = os.path.splitext(pdf_document_name)[0]  # Safe removal of extension
+                        temp_pdf_path = f"split_{pdf_document_name}.pdf"  # Ensures .pdf is always added
+                        # Construct the full path for the split PDF
+                        split_pdf_path = os.path.join(temp_pdf_directory, temp_pdf_path)
+                        split_pdf_path = split_pdf_path.replace('\\', '/')
+                        is_split_successful = split_pdf_based_on_headers_and_fields(document_download_path, split_pdf_path, header_keywords, field_keywords, content_keywords)
+                        if is_split_successful:
+                            update_split_status_and_split_pdf_path(db_config, registration_no, document_id, split_pdf_path)
                     temp_pdf_directory = os.path.dirname(document_download_path)
                     pdf_document_name = os.path.basename(document_download_path)
                     pdf_document_name = str(pdf_document_name).replace('.pdf','')
@@ -121,7 +141,8 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
                     finance_output_file_path = os.path.join(temp_pdf_directory, finance_output_file_name)
                     finance_status, profit_and_loss_status = get_financial_status(db_config, registration_no, document_id)
                     if str(finance_status).lower() != 'y':
-                        main_finance_extraction = finance_main(db_config, config_dict, document_download_path, registration_no, temp_pdf_path_finance, finance_output_file_path)
+                        finance_type='finance'
+                        main_finance_extraction = finance_main(db_config, config_dict, document_download_path, registration_no,finance_type,temp_pdf_path_finance, finance_output_file_path,document_id)
                         if main_finance_extraction:
                             logging.info(f"Successfully extracted for assets and liabilities")
                             update_finance_status(db_config, registration_no, document_id)
@@ -136,7 +157,9 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
                         pnl_output_file_name = pnl_output_file_name + '.xlsx'
                     pnl_output_path = os.path.join(temp_pdf_directory, pnl_output_file_name)
                     if str(profit_and_loss_status).lower() != 'y':
-                        pnl_extraction = profit_and_loss_main(db_config, config_dict, document_download_path, registration_no, temp_pdf_path_pnl, pnl_output_path)
+                        finance_type = 'pnl'
+                        pnl_extraction = finance_main(db_config, config_dict, document_download_path, registration_no, finance_type,temp_pdf_path_pnl, pnl_output_path, document_id)
+
                         if pnl_extraction:
                             logging.info(f"Successfully extracted Profit and Loss")
                             update_pnl_status(db_config, registration_no, document_id)
@@ -193,6 +216,7 @@ def json_loader_and_tables(db_config, config_excel_path, registration_no, receip
         form13_file_table = None
         no_of_form13 = None
         financial_table = None
+        tags_table = None
         json_loader_status, json_file_path, json_nodes = json_loader(db_config, config_json_file_path, registration_no, root_path, config_excel_path, sheet_name, receipt_no)
         if json_loader_status:
             order_sheet_name = "JSON Non-LLP Order"
@@ -207,6 +231,7 @@ def json_loader_and_tables(db_config, config_excel_path, registration_no, receip
             final_email_table = final_table(db_config, registration_no, database_id)
             form13_file_table, no_of_form13 = form13_table(db_config, registration_no)
             financial_table = financials_table(db_config, registration_no)
+            tags_table = new_tags_table(db_config, registration_no)
     except Exception as e:
         logging.error(f"Exception occurred while generating json loader {e}")
         tb = traceback.extract_tb(e.__traceback__)
@@ -215,4 +240,4 @@ def json_loader_and_tables(db_config, config_excel_path, registration_no, receip
                 errors.append(f"File {frame.filename},Line {frame.lineno}: {frame.line} - {str(e)}")
         raise Exception('\n'.join(errors))
     else:
-        return True, final_email_table, json_file_path, form13_file_table, no_of_form13, financial_table
+        return True, final_email_table, json_file_path, form13_file_table, no_of_form13, financial_table,tags_table
