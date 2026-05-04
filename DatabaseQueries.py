@@ -805,3 +805,25 @@ def get_new_tags(db_config, registration_no, database_id):
     finally:
         cursor.close()
         connection.close()
+
+def check_repeated_orders(db_config,registration_no):
+    setup_logging()
+    try:
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+        repeated_order_query = f"select count(*) from orders where registration_no = '{registration_no}'"
+        logging.info(repeated_order_query)
+        cursor.execute(repeated_order_query)
+        repeated_order_query = cursor.fetchall()
+        print(repeated_order_query)
+        count = repeated_order_query[0][0]
+        cursor.close()
+        connection.close()
+        if count > 1:
+            result = "Yes, this one is a repeated order"
+        else:
+            result = "No, this one is not a repeated order"
+
+        return result
+    except Exception as e:
+        logging.error(f"Error in fetching number of pending files {e}")

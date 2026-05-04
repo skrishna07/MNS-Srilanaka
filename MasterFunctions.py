@@ -111,7 +111,8 @@ def data_extraction_and_insertion(db_config, registration_no, config_dict):
                     if form40_3_13_extraction:
                         logging.info(f"Successfully extracted for {document_name}")
                         update_extraction_status(db_config, document_id, registration_no)
-                elif 'financial' in str(document_name).lower():
+                # elif 'financial' in str(document_name).lower() or 'annual account' in str(document_name).lower():# annual account added  by gopi
+                elif(('financial' in str(document_name).lower() or 'annual account' in str(document_name).lower())and 'migrated' not in str(document_name).lower()):
                     split_status = get_split_status(db_config, registration_no, document_id)
                     if str(split_status).lower() != 'y':
                         header_keywords = str(config_dict['headers']).split(',')

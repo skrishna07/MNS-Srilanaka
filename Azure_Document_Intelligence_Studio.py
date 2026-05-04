@@ -49,8 +49,3 @@ def azure_pdf_to_excel_conversion(local_file_path,excel_file_path):
 
     # Return the list of DataFrames
     return table_dataframes
-
-
-# local_file_path = r"C:\Users\Bradsol\Downloads\Druckversion-17-19.pdf"
-# excel_file_path = r"C:\Users\Bradsol\Downloads\Druckversion-17-19.xlsx"
-# azure_pdf_to_excel_conversion(local_file_path,excel_file_path)
