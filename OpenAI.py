@@ -13,7 +13,7 @@ def split_openai(text, initial_prompt):
     prompt = str(text) + ' ' + '\n' + '--------------------------------' + '\n' + initial_prompt
     logging.info(prompt)
     payload = json.dumps({
-        "model": "gpt-4o",
+        "model": "gpt-5.2",
         "messages": [
             {
                 "role": "user",
@@ -21,7 +21,6 @@ def split_openai(text, initial_prompt):
             }
         ],
         "temperature": 0.7,
-        "max_tokens": 4096,
         "top_p": 1,
         "frequency_penalty": 0,
         "presence_penalty": 0

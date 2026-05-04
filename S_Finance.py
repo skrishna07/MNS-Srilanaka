@@ -17,6 +17,7 @@ from Azure_Document_Intelligence_Studio import azure_pdf_to_excel_conversion
 from DatabaseQueries import update_excel_status_and_path
 from Srilanka_mapping_and_comparison import srilanka_mapping_and_comp
 from DatabaseQueries import insert_new_tags
+from Split_Scanned_Pdf import split_pdf_based_on_headers_and_fields
 
 
 
@@ -62,7 +63,6 @@ def split_pdf(file_path, start_page, end_page, output_path):
         logging.error(f"Error in splitting pdf {e}")
         raise Exception(e)
 
-
 def finance_main(db_config, config_dict, pdf_path, registration_no,financial_type, temp_pdf_path, output_file_path,database_id):
     setup_logging()
     error_count = 0
@@ -81,11 +81,16 @@ def finance_main(db_config, config_dict, pdf_path, registration_no,financial_typ
         else:
             raise Exception("No Input financial type provided")
         starting_page, ending_page = find_header_and_next_pages(pdf_path, negative_fields, fields)
+        print(starting_page,ending_page)
         if starting_page is not None:
             logging.info(f"Taking from page {starting_page + 1} to {ending_page + 1}")
-        split_pdf(pdf_path, starting_page+1, ending_page+1, temp_pdf_path)
-        extracted_text = amazon_ocr(temp_pdf_path)
-        extracted_text = extracted_text.replace(',','')
+            split_pdf(pdf_path, starting_page + 1, ending_page + 1, temp_pdf_path)
+            extracted_text = amazon_ocr(temp_pdf_path)
+        else:
+            logging.warning(f"Scanned or header not found. Processing full PDF: {pdf_path}")
+
+            # Directly run OCR on full PDF
+            extracted_text = amazon_ocr(pdf_path)
         logging.info(extracted_text)
         config_file_path = config_dict['financial_config']
         map_file_sheet_name = config_dict['config_sheet']

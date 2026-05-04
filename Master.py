@@ -18,7 +18,7 @@ from DatabaseQueries import update_bot_comments_empty
 from DatabaseQueries import get_legal_name_form15
 from DatabaseQueries import update_completed_status_api
 from DatabaseQueries import update_end_time
-
+from DatabaseQueries import check_repeated_orders
 
 def main():
     excel_file = 'Config.xlsx'
@@ -65,13 +65,15 @@ def main():
                                 update_bot_comments_empty(db_config, registration_no, database_id)
                                 update_end_time(db_config, registration_no, database_id)
                                 transactional_log_file_path = generate_transactional_log(db_config, config_dict)
+                                result=check_repeated_orders(db_config,registration_no)
                                 legal_name_form15 = get_legal_name_form15(db_config, registration_no)
                                 completed_subject = str(config_dict['cin_Completed_subject']).format(registration_no,
                                                                                                      receipt_no)
                                 completed_body = str(config_dict['cin_Completed_body']).format(registration_no,
-                                                                                               receipt_no, local_name, legal_name_form15,
-                                                                                               final_email_table, no_of_form13, form13_final_table, financial_table,tags_table)
+                                                                                               receipt_no, local_name,result, legal_name_form15,
+                                                                                               final_email_table, no_of_form13, form13_final_table, financial_table)
                                 business_mails = str(config_dict['business_mail']).split(',')
+                                Support_mail = str(config_dict['Support_mail']).split(',')
                                 attachments.append(json_file_path)
                                 attachments.append(transactional_log_file_path)
                                 api_update_status = update_completed_status_api(receipt_no, config_dict)
@@ -80,6 +82,7 @@ def main():
                                 try:
                                     send_email(config_dict, completed_subject, completed_body, business_mails,
                                                attachments)
+                                    send_email(config_dict, completed_subject, completed_body, Support_mail)
                                 except Exception as e:
                                     logging.error(f"Error sending mail {e}")
                             update_locked_by_empty(db_config, database_id)
